@@ -11,5 +11,5 @@ def make_lower(a):
 
 text = input("Enter your inputs:\n ")
 result = make_lower(text)
-print("Final Version after review:", result)  
+print("Final Version after review:", result)
 
