@@ -18,16 +18,16 @@ def analyze_image(image_path):
 
     if not os.path.exists(image_path):
        raise FileNotFoundError(f"Image not found: {image_path}")
-    image = Image.open()
+    image = Image.open(image_path)
 
-    genai.configure(GEMINI_KEY = key)
+    genai.configure(api_key = key)
     prompt = "List all the food ingredients you can see in this image. Return only ingredient names separated by commas."
     model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content([prompt, image])
     ingredients_string = response.text
 
     ingredients = []
-    for items in ingredients_string:
+    for items in ingredients_string.split(","):
       ingredients.append(items.strip())
     return ingredients
 
