@@ -7,14 +7,18 @@ from google.genai import types
 from google import genai
 import io
 
-
 def main():
-    img_path = input("Enter img path:")
+
+    img_path = input("Enter img path: ")
     ingredients = analyze_image(img_path)
+    print("Detected ingredients:", ingredients)
     recipes = get_recipes(ingredients)
     filtered = filter_recipes(recipes)
-    result = display_recipe(filtered[0])
-    print (result)
+    if not filtered:
+        print("No recipes found.")
+    else:
+        result = display_recipe(filtered[0])
+        print(result)
 
 def analyze_image(image_path):
     load_dotenv()
@@ -30,7 +34,7 @@ def analyze_image(image_path):
 
     client = genai.Client(api_key=key)
     response = client.models.generate_content(
-        model="gemini-2.5-flash-lite",
+        model="gemini-2.5-flash",
         contents=[
             types.Part.from_bytes(data=buf.getvalue(), mime_type=mime),
             types.Part.from_text(text="List all the food ingredients you can see in this image. Return only ingredient names separated by commas."),
@@ -48,22 +52,49 @@ def analyze_image(image_path):
     for items in ingredients_string.split(","):
       ingredients.append(items.strip())
     return ingredients
-
+    
 
 def get_recipes(ingredients):
+    
     load_dotenv()
-    api_key = os.getenv("API_KEY")
+    api_key = os.getenv("SPOONACULAR_KEY")
     ing = ",".join(ingredients)
-    parameters = {
-        "ingredients": ing,
-        "number": 5,
-        "apiKey": api_key,
-    }
-    response = requests.get("https://api.spoonacular.com/recipes/findByIngredients",params=parameters)
-    recipes = response.json()
+
+    # Step 1: find matching recipes by ingredients
+    search_response = requests.get(
+        "https://api.spoonacular.com/recipes/findByIngredients",
+        params={
+            "ingredients": ing,
+            "number": 5,
+            "ranking": 1,
+            "ignorePantry": True,
+            "apiKey": api_key,
+        }
+    )
+    recipes = search_response.json()
+    print("Matched recipes:", [r["title"] for r in recipes])
+
+    if not recipes:
+        return []
+
+    # Step 2: fetch full details for each recipe (steps, time, servings)
+    ids = ",".join(str(r["id"]) for r in recipes)
+    detail_response = requests.get(
+        "https://api.spoonacular.com/recipes/informationBulk",
+        params={
+            "ids": ids,
+            "includeNutrition": False,
+            "apiKey": api_key,
+        }
+    )
+    details = {r["id"]: r for r in detail_response.json()}
+
+    # Step 3: merge ingredient match info with full details
+    for recipe in recipes:
+        recipe.update(details.get(recipe["id"], {}))
 
     return recipes
-        
+
 def filter_recipes(recipes, max_missing=None, min_used=None):
     result = []
     for recipe in recipes:
@@ -96,6 +127,7 @@ def display_recipe(recipe):
     result += "\n\nRecipe image: " + recipe["image"]
 
     return result
+
 
 
 if __name__ == "__main__":

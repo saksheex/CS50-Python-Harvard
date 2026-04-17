@@ -1,23 +1,17 @@
 
 from CS50project import analyze_image
 def test_analyze_image():
-   fake_image_path = "/Users/sakshee/Downloads/9908fbbafe2ce2b13b9f6710e58c58b1.jpg"
-   fake_gemini_response = MagicMock()
-   fake_gemini_response.text = "tomato, onion, paneer"
-   with patch("os.path.exists", return_value=True), \
-        patch("PIL.Image.open"),\
-        patch("google.generativeai.GenerativeModel") as mock_model:
-        mock_model.return_value.generate_content.return_value = fake_gemini_response
-        result = analyze_image(fake_image_path)
-   assert type(result) == list
-   assert "tomato" in result
+
+    result = analyze_image("/Users/sakshee/Desktop/github/CS50-Python-Harvard/testimg.jpg")
+    assert type(result) == list
+    assert len(result) > 0
 
 
 from CS50project import get_recipes
 from unittest.mock import patch, MagicMock
 def test_get_recipes():
     fake_response = [
-    {"title": "Paneer Curry", "cuisines": ["Indian"],"cook_time": 40}
+    {"title": "Paneer Curry"}
     ]
     mock_get = MagicMock()
     mock_get.json.return_value = fake_response
@@ -32,38 +26,48 @@ def test_get_recipes():
 from CS50project import filter_recipes
 def test_filter_recipes():
     recipes = [
-        {"name": "Pasta", "cuisine": "Italian", "cook_time": 20},
-        {"name": "Curry", "cuisine": "Indian", "cook_time": 45}
-
+        {"title": "Pizza", "missedIngredientCount": 5, "usedIngredientCount": 2},
+        {"title": "Curry", "missedIngredientCount": 1, "usedIngredientCount": 4},
+        {"title": "Pasta", "missedIngredientCount": 3, "usedIngredientCount": 1},
     ]
-    result = filter_recipes(recipes,cuisine = "Indian")
-    assert len(result) == 1
-    assert result[0]["name"] == "Curry"
+    result = filter_recipes(recipes, max_missing=3)
+    assert len(result) == 2
+    assert result[0]["title"] == "Curry"
+    assert result[1]["title"] == "Pasta"
 
+
+def test_filter_recipes_min_used():
+    recipes = [
+        {"title": "Pizza", "missedIngredientCount": 5, "usedIngredientCount": 2},
+        {"title": "Curry", "missedIngredientCount": 1, "usedIngredientCount": 4},
+        {"title": "Pasta", "missedIngredientCount": 3, "usedIngredientCount": 1},
+    ]
+    result = filter_recipes(recipes, min_used=3)
+    assert len(result) == 1
+    assert result[0]["title"] == "Curry"
 
 
 from CS50project import display_recipe
 def test_display_recipe():
     recipe = {
-          "title": "Curry",
-          "cuisines": ["Indian"],
-          "cook_time": 45,
-          "servings": 4,
-          "extendedIngredients": [
-              {"name": "Onion"}
+          "title": "pasta",
+          "usedIngredientCount":3,
+          "missedIngredientCount":2,
+          "usedIngredients": [
+            {"name": "rice"},         
+            {"name": "eggs"},          
         ],
-        "analyzedInstructions": [
-            {
-                "steps": [
-                    {"number": 1, "step": "Chop Onion and Tomatoes"}
-                ]
-            }
-        ]
+        "missedIngredients": [
+            {"name": "ginger", "original": "1 piece ginger"},
+            {"name": "soy sauce", "original": "4 tablespoons soy sauce"},
+        ],
+        "image": "https://img.spoonacular.com/test.jpg"
     }
+
     result = display_recipe(recipe)
-    assert "Curry" in result
-    assert "45" in result
-    assert "Onion" in result
-    assert "Chop Onion and Tomatoes" in result
+    assert "pasta" in result
+    assert "3" in result
+    assert "1 piece ginger" in result
+    
 
 
