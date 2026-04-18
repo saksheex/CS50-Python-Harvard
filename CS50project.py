@@ -11,7 +11,7 @@ def main():
 
     img_path = input("Enter img path: ")
     ingredients = analyze_image(img_path)
-    print("Detected ingredients:", ingredients)
+    print("Detected ingredients:", ingredients, "\n")
     recipes = get_recipes(ingredients)
     filtered = filter_recipes(recipes)
     if not filtered:
@@ -34,7 +34,7 @@ def analyze_image(image_path):
 
     client = genai.Client(api_key=key)
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-flash-lite-latest",
         contents=[
             types.Part.from_bytes(data=buf.getvalue(), mime_type=mime),
             types.Part.from_text(text="List all the food ingredients you can see in this image. Return only ingredient names separated by commas."),
@@ -65,14 +65,20 @@ def get_recipes(ingredients):
         "https://api.spoonacular.com/recipes/findByIngredients",
         params={
             "ingredients": ing,
-            "number": 5,
-            "ranking": 1,
+            "number": 3,
+            "ranking": 2,
             "ignorePantry": True,
             "apiKey": api_key,
         }
     )
     recipes = search_response.json()
-    print("Matched recipes:", [r["title"] for r in recipes])
+
+    # If no response or error, return empty list
+    if isinstance(recipes, dict) and "status" in recipes:
+        print(f"API Error: {recipes.get('message')}")
+        return []
+    
+    print("Matched recipes:", [r["title"] for r in recipes], "\n")
 
     if not recipes:
         return []
@@ -80,14 +86,14 @@ def get_recipes(ingredients):
     # Step 2: fetch full details for each recipe (steps, time, servings)
     ids = ",".join(str(r["id"]) for r in recipes)
     detail_response = requests.get(
-        "https://api.spoonacular.com/recipes/informationBulk",
+        f"https://api.spoonacular.com/recipes/informationBulk",
         params={
             "ids": ids,
             "includeNutrition": False,
             "apiKey": api_key,
         }
     )
-    details = {r["id"]: r for r in detail_response.json()}
+    details = {int(d["id"]): d for d in detail_response.json()}
 
     # Step 3: merge ingredient match info with full details
     for recipe in recipes:
@@ -95,7 +101,7 @@ def get_recipes(ingredients):
 
     return recipes
 
-def filter_recipes(recipes, max_missing=None, min_used=None):
+def filter_recipes(recipes, max_missing=1, min_used=2):
     result = []
     for recipe in recipes:
         if max_missing is not None:
@@ -108,12 +114,29 @@ def filter_recipes(recipes, max_missing=None, min_used=None):
     return result
     
 def display_recipe(recipe):
+
+    # load_dotenv()
+    # key = os.getenv("GEMINI_KEY")
+
+
+    # client = genai.Client(api_key=key)
+
+    # response = client.models.generate_content(
+    #     model="gemini-2.5-flash-lite",
+    #     contents=[
+    #         types.Part.from_text(text="Here is the recipe information: " + str(recipe)),
+    #         types.Part.from_text(text="Given the recipes write step by step process of getting the recipe made in a clear well formatted text. Bullet Points should use '-' and not '*' and the steps should be in order. Do not include any information other than the cooking instructions."),
+    #     ],
+    #     config=types.GenerateContentConfig(
+    #         temperature=0,
+    #         top_p=0.95,
+    #         top_k=20,
+    #     ),
+    # )
    
     result = ""
 
-    result += "Recipe: " + recipe["title"]
-    result += "\nIngredients you have: " + str(recipe["usedIngredientCount"])
-    result += "\nIngredients you need: " + str(recipe["missedIngredientCount"])
+    result += "Recipe: " + recipe["title"] + "\n\n"
 
     result += "\n\nIngredients you have:"
     for ingredient in recipe["usedIngredients"]:
@@ -124,11 +147,19 @@ def display_recipe(recipe):
         amount = ingredient["original"]
         result += "\n  - " + amount
 
+    result += "\n\n Cooking Instructions:"
+    if recipe.get("analyzedInstructions"):  # Check if it exists
+        steps = recipe["analyzedInstructions"][0]["steps"]  # Get the first instruction set
+        
+        for step in steps:
+            step_num = step["number"]
+            step_text = step["step"]
+            result += f"{step_num}. {step_text}\n"
+    
+
     result += "\n\nRecipe image: " + recipe["image"]
 
     return result
-
-
 
 if __name__ == "__main__":
     main()

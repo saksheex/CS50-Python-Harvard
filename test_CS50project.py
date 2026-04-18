@@ -2,7 +2,7 @@
 from CS50project import analyze_image
 def test_analyze_image():
 
-    result = analyze_image("/Users/sakshee/Desktop/github/CS50-Python-Harvard/testimg.jpg")
+    result = analyze_image("/Users/sakshee/Desktop/github/datascience-notebook/veges.png")
     assert type(result) == list
     assert len(result) > 0
 
@@ -11,7 +11,7 @@ from CS50project import get_recipes
 from unittest.mock import patch, MagicMock
 def test_get_recipes():
     fake_response = [
-    {"title": "Paneer Curry"}
+    {"id": 1, "title": "Paneer Curry"}
     ]
     mock_get = MagicMock()
     mock_get.json.return_value = fake_response
@@ -51,8 +51,6 @@ from CS50project import display_recipe
 def test_display_recipe():
     recipe = {
           "title": "pasta",
-          "usedIngredientCount":3,
-          "missedIngredientCount":2,
           "usedIngredients": [
             {"name": "rice"},         
             {"name": "eggs"},          
@@ -66,7 +64,7 @@ def test_display_recipe():
 
     result = display_recipe(recipe)
     assert "pasta" in result
-    assert "3" in result
+    assert "rice" in result
     assert "1 piece ginger" in result
     
 
