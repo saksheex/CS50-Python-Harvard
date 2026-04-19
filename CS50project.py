@@ -114,25 +114,6 @@ def filter_recipes(recipes, max_missing=1, min_used=2):
     return result
     
 def display_recipe(recipe):
-
-    # load_dotenv()
-    # key = os.getenv("GEMINI_KEY")
-
-
-    # client = genai.Client(api_key=key)
-
-    # response = client.models.generate_content(
-    #     model="gemini-2.5-flash-lite",
-    #     contents=[
-    #         types.Part.from_text(text="Here is the recipe information: " + str(recipe)),
-    #         types.Part.from_text(text="Given the recipes write step by step process of getting the recipe made in a clear well formatted text. Bullet Points should use '-' and not '*' and the steps should be in order. Do not include any information other than the cooking instructions."),
-    #     ],
-    #     config=types.GenerateContentConfig(
-    #         temperature=0,
-    #         top_p=0.95,
-    #         top_k=20,
-    #     ),
-    # )
    
     result = ""
 
@@ -148,8 +129,8 @@ def display_recipe(recipe):
         result += "\n  - " + amount
 
     result += "\n\n Cooking Instructions:"
-    if recipe.get("analyzedInstructions"):  # Check if it exists
-        steps = recipe["analyzedInstructions"][0]["steps"]  # Get the first instruction set
+    if recipe.get("analyzedInstructions"):  
+        steps = recipe["analyzedInstructions"][0]["steps"]  
         
         for step in steps:
             step_num = step["number"]

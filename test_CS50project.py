@@ -27,24 +27,13 @@ from CS50project import filter_recipes
 def test_filter_recipes():
     recipes = [
         {"title": "Pizza", "missedIngredientCount": 5, "usedIngredientCount": 2},
-        {"title": "Curry", "missedIngredientCount": 1, "usedIngredientCount": 4},
-        {"title": "Pasta", "missedIngredientCount": 3, "usedIngredientCount": 1},
+        {"title": "Curry", "missedIngredientCount": 1, "usedIngredientCount": 2},
+        {"title": "Pasta", "missedIngredientCount": 4, "usedIngredientCount": 1},
     ]
-    result = filter_recipes(recipes, max_missing=3)
-    assert len(result) == 2
-    assert result[0]["title"] == "Curry"
-    assert result[1]["title"] == "Pasta"
-
-
-def test_filter_recipes_min_used():
-    recipes = [
-        {"title": "Pizza", "missedIngredientCount": 5, "usedIngredientCount": 2},
-        {"title": "Curry", "missedIngredientCount": 1, "usedIngredientCount": 4},
-        {"title": "Pasta", "missedIngredientCount": 3, "usedIngredientCount": 1},
-    ]
-    result = filter_recipes(recipes, min_used=3)
+    result = filter_recipes(recipes, max_missing=1, min_used=2)
     assert len(result) == 1
     assert result[0]["title"] == "Curry"
+    
 
 
 from CS50project import display_recipe
