@@ -75,7 +75,7 @@ The recipe lookup is split into two API calls because Spoonacular's ingredient-m
    python project.py
    ```
 
-4. Enter an image path when prompted (e.g. `veges.png`).
+4. Enter an image path when prompted (e.g. `vegetables.png`).
 
 5. Run tests:
    ```
