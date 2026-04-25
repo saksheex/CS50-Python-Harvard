@@ -1,6 +1,6 @@
 # Cook GPT
 
-#### Video Demo: <URL HERE>
+#### Video Demo: https://youtu.be/P9vmeL5-13Y
 
 #### Description:
 
